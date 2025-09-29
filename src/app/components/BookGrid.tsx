@@ -27,7 +27,7 @@ const BookGrid: React.FC<BookGridProps> = ({ books, onAddToCart }) => {
   // Carousel settings for featured books
   const booksPerPage = 4;
   const totalFeaturedPages = Math.ceil(featuredBooks.length / booksPerPage);
-  
+
   // Get current featured books to display
   const currentFeaturedBooks = useMemo(() => {
     const startIndex = featuredCarouselIndex * booksPerPage;
@@ -62,11 +62,11 @@ const BookGrid: React.FC<BookGridProps> = ({ books, onAddToCart }) => {
   const filteredAndSortedBooks = useMemo(() => {
     // First filter the books
     const filtered = books.filter(book => {
-      const matchesSearch = 
+      const matchesSearch =
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesGenre = 
+
+      const matchesGenre =
         selectedGenre === 'All' || book.genre.includes(selectedGenre);
 
       return matchesSearch && matchesGenre;
@@ -130,9 +130,9 @@ const BookGrid: React.FC<BookGridProps> = ({ books, onAddToCart }) => {
     setCurrentPage(1);
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Featured Books Section */}
+return (
+  <div className="container mx-auto px-4 py-8">
+    {/* Featured Books Section */}
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Featured Books</h2>
@@ -278,32 +278,40 @@ const BookGrid: React.FC<BookGridProps> = ({ books, onAddToCart }) => {
         </div>
       </section>
 
-      {/* All Books List */}
-      <section>
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">All Books</h2>
-        {filteredAndSortedBooks.length > 0 ? (
-          <>
-            <div className="space-y-3">
+    {/* All Books List */}
+    <section>
+      <h2 className="text-3xl font-bold text-gray-800 mb-6">All Books</h2>
+      {filteredAndSortedBooks.length > 0 ? (
+        <>
+          <div className="space-y-3">
               {paginatedBooks.map(book => (
                 <BookListItem key={book.id} book={book} onAddToCart={onAddToCart} />
-              ))}
-            </div>
-            
-            {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              itemsPerPage={itemsPerPage}
-              totalItems={filteredAndSortedBooks.length}
-            />
-          </>
-        ) : (
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredAndSortedBooks.length}
+          />
+        </>
+      ) : (
           <p className="text-center text-gray-500 text-lg">No books found matching your criteria.</p>
-        )}
-      </section>
-    </div>
-  );
+      )}
+    </section>
+
+    {/* Scroll to Top Button */}
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-2 rounded-full shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
+    >
+      ↑ Top
+    </button>
+  </div>
+);
 };
 
 export default BookGrid;
