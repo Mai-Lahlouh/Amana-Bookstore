@@ -20,8 +20,12 @@ export default function HomePage() {
 
         // Your API wraps books in data
         setBooks(result.data);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch books");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Failed to fetch books');
+        }
       } finally {
         setIsLoading(false);
       }

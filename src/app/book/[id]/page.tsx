@@ -18,27 +18,31 @@ export default function BookDetailPage() {
   const router = useRouter();
   const { id } = params;
 
-useEffect(() => {
-  if (id) {
-    const fetchBook = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetch(`/api/books/${id}`);
+  useEffect(() => {
+    if (id) {
+      const fetchBook = async () => {
+        try {
+          setIsLoading(true);
+          const res = await fetch(`/api/books/${id}`);
         if (!res.ok) throw new Error('Failed to fetch book');
-        const data = await res.json();
+          const data = await res.json();
 
-        setBook(data.book);
-        setBookReviews(data.reviews || []);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch book');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+          setBook(data.book);
+          setBookReviews(data.reviews || []);
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError("Failed to fetch books");
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-    fetchBook();
-  }
-}, [id]);
+      fetchBook();
+    }
+  }, [id]);
 
 
 
@@ -76,12 +80,12 @@ useEffect(() => {
     // Redirect to the cart page after adding
     router.push('/cart');
   };
-  
+
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-    
+
     for (let i = 1; i <= 5; i++) {
       if (i <= fullStars) {
         // Full star
@@ -157,7 +161,7 @@ useEffect(() => {
         <div className="flex flex-col justify-center">
           <h1 className="text-4xl font-extrabold text-gray-800 mb-2">{book.title}</h1>
           <p className="text-xl text-gray-600 mb-4">by {book.author}</p>
-          
+
           <div className="flex items-center mb-4">
             {renderStars(book.rating)}
             <span className="text-md text-gray-500 ml-2">({book.reviewCount} reviews)</span>
@@ -187,7 +191,7 @@ useEffect(() => {
             />
           </div>
 
-          <button 
+          <button
             onClick={handleAddToCart}
             className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 transition-colors duration-300 text-lg font-semibold cursor-pointer"
           >
@@ -203,7 +207,7 @@ useEffect(() => {
       {/* Reviews Section */}
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Customer Reviews</h2>
-        
+
         {bookReviews.length > 0 ? (
           <div className="space-y-6">
             {bookReviews.map((review) => (
@@ -225,10 +229,10 @@ useEffect(() => {
                     )}
                   </div>
                 </div>
-                
+
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">{review.title}</h3>
                 <p className="text-gray-700 mb-3 leading-relaxed">{review.comment}</p>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-600">by {review.author}</span>
                 </div>
