@@ -4,8 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { books } from '../../data/books';
-import { reviews } from '../../data/reviews';
+
 import { Book, CartItem, Review } from '../../types';
 
 export default function BookDetailPage() {
@@ -19,20 +18,29 @@ export default function BookDetailPage() {
   const router = useRouter();
   const { id } = params;
 
-  useEffect(() => {
-    if (id) {
-      const foundBook = books.find((b) => b.id === id);
-      if (foundBook) {
-        setBook(foundBook);
-        // Get reviews for this book
-        const bookReviewsData = reviews.filter((review) => review.bookId === id);
-        setBookReviews(bookReviewsData);
-      } else {
-        setError('Book not found.');
+useEffect(() => {
+  if (id) {
+    const fetchBook = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch(`/api/books/${id}`);
+        if (!res.ok) throw new Error('Failed to fetch book');
+        const data = await res.json();
+
+        setBook(data.book);
+        setBookReviews(data.reviews || []);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch book');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }
-  }, [id]);
+    };
+
+    fetchBook();
+  }
+}, [id]);
+
+
 
   const handleAddToCart = () => {
     if (!book) return;

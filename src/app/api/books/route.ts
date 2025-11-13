@@ -1,15 +1,18 @@
 // src/app/api/books/route.ts
-import { NextResponse } from 'next/server';
-import { books } from '../../data/books';
+import { NextResponse } from "next/server";
+import { connectDB } from "../../lib/mongodb";
+import Book from "../../models/Book";
 
 // GET /api/books - Return all books
 export async function GET() {
   try {
-    return NextResponse.json(books);
+    await connectDB();
+    const books = await Book.find({});
+    return NextResponse.json({ success: true, data: books });
   } catch (err) {
-    console.error('Error fetching books:', err);
+    console.error("Error fetching books:", err);
     return NextResponse.json(
-      { error: 'Failed to fetch books' },
+      { error: "Failed to fetch books" },
       { status: 500 }
     );
   }
@@ -26,20 +29,20 @@ export async function GET() {
 
 // Example future database integration:
 // import { db } from '@/lib/database';
-// 
+//
 // export async function GET(request: Request) {
 //   const { searchParams } = new URL(request.url);
 //   const page = parseInt(searchParams.get('page') || '1');
 //   const limit = parseInt(searchParams.get('limit') || '10');
 //   const genre = searchParams.get('genre');
-//   
+//
 //   try {
 //     const books = await db.books.findMany({
 //       where: genre ? { genre: { contains: genre } } : {},
 //       skip: (page - 1) * limit,
 //       take: limit,
 //     });
-//     
+//
 //     return NextResponse.json(books);
 //   } catch (error) {
 //     return NextResponse.json(

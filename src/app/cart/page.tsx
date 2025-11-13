@@ -12,38 +12,49 @@ export default function CartPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load cart from localStorage
-    const storedCart = localStorage.getItem('cart');
-    if (storedCart) {
+    const loadCart = () => {
+      const storedCart = localStorage.getItem('cart');
+      if (!storedCart) {
+        setCartItems([]);
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const cart: CartItemType[] = JSON.parse(storedCart);
-        const itemsWithBooks = cart
+        const parsedCart: CartItemType[] = JSON.parse(storedCart);
+        const itemsWithBooks = parsedCart
           .map(item => {
             const book = books.find(b => b.id === item.bookId);
-            return book ? { book, quantity: item.quantity } : null;
+            if (!book) return null;
+            return { book, quantity: item.quantity };
           })
           .filter((item): item is { book: Book; quantity: number } => item !== null);
 
         setCartItems(itemsWithBooks);
-      } catch (error) {
-        console.error('Failed to parse cart from localStorage', error);
+      } catch (err) {
+        console.error('Error parsing cart:', err);
         setCartItems([]);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    loadCart();
+
+    const handleCartUpdated = () => loadCart();
+    window.addEventListener('cartUpdated', handleCartUpdated);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdated);
   }, []);
 
   const updateQuantity = (bookId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
 
-    // Update local state
-    const updatedItems = cartItems.map(item => 
+    const updated = cartItems.map(item =>
       item.book.id === bookId ? { ...item, quantity: newQuantity } : item
     );
-    setCartItems(updatedItems);
+    setCartItems(updated);
 
-    // Update localStorage
-    const cartForStorage = updatedItems.map(item => ({
+    const cartForStorage = updated.map(item => ({
       id: `${item.book.id}-${Date.now()}`,
       bookId: item.book.id,
       quantity: item.quantity,
@@ -51,43 +62,39 @@ export default function CartPage() {
     }));
     localStorage.setItem('cart', JSON.stringify(cartForStorage));
 
-    // Notify navbar
     window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const removeItem = (bookId: string) => {
-    if (confirm("Are you sure you want to remove this item?")) {
-      // Update local state
-    const updatedItems = cartItems.filter(item => item.book.id !== bookId);
-      setCartItems(updatedItems);
+    if (!confirm('Remove this item?')) return;
 
-      // Update localStorage
-    const cartForStorage = updatedItems.map(item => ({
-        id: `${item.book.id}-${Date.now()}`,
-        bookId: item.book.id,
-        quantity: item.quantity,
+    const updated = cartItems.filter(item => item.book.id !== bookId);
+    setCartItems(updated);
+
+    const cartForStorage = updated.map(item => ({
+      id: `${item.book.id}-${Date.now()}`,
+      bookId: item.book.id,
+      quantity: item.quantity,
       addedAt: new Date().toISOString()
-      }));
+    }));
     localStorage.setItem('cart', JSON.stringify(cartForStorage));
 
-      // Notify navbar
-      window.dispatchEvent(new CustomEvent("cartUpdated"));
-    }
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
   const clearCart = () => {
-    if (confirm("Are you sure you want to remove the cart?")) {
-      setCartItems([]);
-      localStorage.removeItem("cart");
-      window.dispatchEvent(new CustomEvent("cartUpdated"));
-    }
+    if (!confirm('Are you sure you want to clear the cart?')) return;
+    setCartItems([]);
+    localStorage.removeItem('cart');
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   };
 
-  const totalPrice = cartItems.reduce((total, item) => total + (item.book.price * item.quantity), 0);
+  const totalPrice = cartItems.reduce(
+    (total, item) => total + (item.book?.price ?? 0) * item.quantity,
+    0
+  );
 
-  if (isLoading) {
-    return <div className="text-center py-10">Loading...</div>;
-  }
+  if (isLoading) return <div className="text-center py-10">Loading...</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -96,20 +103,19 @@ export default function CartPage() {
       {cartItems.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow-md">
           <h2 className="text-xl text-gray-600 mb-4">Your cart is empty</h2>
-          <Link href="/" className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition-colors cursor-pointer">
+          <Link
+            href="/"
+            className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
+          >
             Continue Shopping
           </Link>
         </div>
       ) : (
         <>
           <div className="flex flex-col gap-4">
-            {cartItems.map((item) => (
-              <div
-                key={item.book.id}
-                className="bg-white rounded-lg shadow-md p-4"
-              >
+            {cartItems.map(item => (
+              <div key={item.book.id} className="bg-white rounded-lg shadow-md p-4">
                 <CartItem
-                  key={item.book.id}
                   item={item}
                   onUpdateQuantity={updateQuantity}
                   onRemoveItem={removeItem}
@@ -124,7 +130,10 @@ export default function CartPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/" className="flex-1 bg-gray-500 text-white text-center py-3 rounded-md hover:bg-gray-600 transition-colors cursor-pointer">
+              <Link
+                href="/"
+                className="flex-1 bg-gray-500 text-white text-center py-3 rounded-md hover:bg-gray-600 transition-colors cursor-pointer"
+              >
                 Continue Shopping
               </Link>
               <button
